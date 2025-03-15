@@ -128,11 +128,7 @@ impl<'a> Iterator for Lexer<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let tok = self.next_token();
-        if tok == Token::EOF {
-            None
-        } else {
-            Some(tok)
-        }
+        if tok == Token::EOF { None } else { Some(tok) }
     }
 }
 

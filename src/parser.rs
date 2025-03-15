@@ -520,7 +520,7 @@ let foobar = 838383;";
 
         for t in tests {
             match itr.next().unwrap() {
-                Statement::Let(ref l) => {
+                Statement::Let(l) => {
                     assert_eq!(l.name, t);
                 }
                 _ => panic!("unknown node"),
@@ -1251,22 +1251,23 @@ return 993322;";
 
                 for (k, v) in &h.pairs {
                     match (&k, &v) {
-                        (Expression::String(key), Expression::Integer(int)) => {
-                            match key.as_str() {
-                                "one" => assert_eq!(1, *int),
-                                "two" => assert_eq!(2, *int),
-                                "three" => assert_eq!(3, *int),
-                                _ => panic!("unexpected key {}", k)
-                            }
+                        (Expression::String(key), Expression::Integer(int)) => match key.as_str() {
+                            "one" => assert_eq!(1, *int),
+                            "two" => assert_eq!(2, *int),
+                            "three" => assert_eq!(3, *int),
+                            _ => panic!("unexpected key {}", k),
                         },
                         (Expression::Integer(key), Expression::Integer(int)) => {
                             assert_eq!(*key, *int);
                             assert_eq!(*int, 4);
-                        },
+                        }
                         (Expression::Boolean(key), Expression::Boolean(val)) => {
                             assert_eq!(key, val)
-                        },
-                        _ => panic!("expected key to be a string and value to be an int but got {:?} and {:?}", k, v)
+                        }
+                        _ => panic!(
+                            "expected key to be a string and value to be an int but got {:?} and {:?}",
+                            k, v
+                        ),
                     }
                 }
             }
@@ -1286,15 +1287,16 @@ return 993322;";
 
                 for (k, v) in &h.pairs {
                     match (&k, &v) {
-                        (Expression::String(key), Expression::Infix(_)) => {
-                            match key.as_str() {
-                                "one" => test_infix(v, 0, Token::Plus, 1),
-                                "two" => test_infix(v, 10, Token::Minus, 8),
-                                "three" => test_infix(v, 15, Token::Slash, 5),
-                                _ => panic!("unexpected key {}", key)
-                            }
+                        (Expression::String(key), Expression::Infix(_)) => match key.as_str() {
+                            "one" => test_infix(v, 0, Token::Plus, 1),
+                            "two" => test_infix(v, 10, Token::Minus, 8),
+                            "three" => test_infix(v, 15, Token::Slash, 5),
+                            _ => panic!("unexpected key {}", key),
                         },
-                        _ => panic!("expected key to be a string and value to be an infix expression but got {:?} and {:?}", k, v)
+                        _ => panic!(
+                            "expected key to be a string and value to be an infix expression but got {:?} and {:?}",
+                            k, v
+                        ),
                     }
                 }
             }

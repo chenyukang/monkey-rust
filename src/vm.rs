@@ -287,7 +287,7 @@ impl<'a> VM<'a> {
 
     fn execute_call(&mut self, num_args: usize) {
         if let Some(frame) = match &*self.stack[self.sp - 1 - num_args] {
-            Object::Closure(ref cl) => Some(Frame {
+            Object::Closure(cl) => Some(Frame {
                 cl: Rc::clone(cl),
                 ip: 0,
                 base_pointer: self.sp - num_args,
@@ -899,8 +899,7 @@ mod test {
                 expected: Object::Int(3),
             },
             VMTestCase {
-                input:
-                    "let a = fn() { 1 }; let b = fn() { a() + 1 }; let c = fn() { b() + 1 }; c();",
+                input: "let a = fn() { 1 }; let b = fn() { a() + 1 }; let c = fn() { b() + 1 }; c();",
                 expected: Object::Int(3),
             },
         ];
@@ -927,11 +926,11 @@ mod test {
     #[test]
     fn functions_without_return_value() {
         let tests = vec![
-            VMTestCase{
+            VMTestCase {
                 input: "let noReturn = fn() { }; noReturn();",
                 expected: Object::Null,
             },
-            VMTestCase{
+            VMTestCase {
                 input: "let noReturn = fn() { }; let noReturnTwo = fn() { noReturn(); }; noReturn(); noReturnTwo();",
                 expected: Object::Null,
             },
@@ -942,12 +941,10 @@ mod test {
 
     #[test]
     fn first_class_functions() {
-        let tests = vec![
-            VMTestCase{
-                input: "let returnsOne = fn() { 1; }; let returnsOneReturner = fn() { returnsOne; }; returnsOneReturner()();",
-                expected: Object::Int(1),
-            }
-        ];
+        let tests = vec![VMTestCase {
+            input: "let returnsOne = fn() { 1; }; let returnsOneReturner = fn() { returnsOne; }; returnsOneReturner()();",
+            expected: Object::Int(1),
+        }];
 
         run_vm_tests(tests);
     }
@@ -960,8 +957,7 @@ mod test {
                 expected: Object::Int(1),
             },
             VMTestCase {
-                input:
-                    "let oneAndTwo = fn() { let one = 1; let two = 2; one + two; }; oneAndTwo();",
+                input: "let oneAndTwo = fn() { let one = 1; let two = 2; one + two; }; oneAndTwo();",
                 expected: Object::Int(3),
             },
             VMTestCase {

@@ -1,5 +1,5 @@
 use crate::ast;
-use crate::code::{make_instruction, Instructions, Op};
+use crate::code::{Instructions, Op, make_instruction};
 use crate::object::{Builtin, CompiledFunction, Object};
 use crate::token::Token;
 use enum_iterator::IntoEnumIterator;
@@ -265,7 +265,7 @@ impl Compiler {
                     SymbolScope::Builtin => {
                         return Err(CompileError {
                             message: "can't assign to builtin function name".to_string(),
-                        })
+                        });
                     }
                     SymbolScope::Free => panic!("free not here"),
                 };
@@ -328,7 +328,7 @@ impl Compiler {
                     _ => {
                         return Err(CompileError {
                             message: format!("unknown operator {:?}", exp.operator),
-                        })
+                        });
                     }
                 };
             }
@@ -341,7 +341,7 @@ impl Compiler {
                     _ => {
                         return Err(CompileError {
                             message: format!("unknown operator {:?}", exp.operator),
-                        })
+                        });
                     }
                 };
             }
