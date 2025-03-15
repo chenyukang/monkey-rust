@@ -1,12 +1,11 @@
-use std::fmt;
-use std::collections::HashMap;
-use std::hash::{Hash,Hasher};
-use std::cell::RefCell;
-use std::rc::Rc;
 use crate::ast;
-use crate::code;
-use code::InstructionsFns;
+use crate::code::{Instructions, InstructionsFns};
 use enum_iterator::IntoEnumIterator;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::rc::Rc;
 
 #[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub enum Object {
@@ -48,11 +47,14 @@ impl fmt::Display for Object {
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct MonkeyHash {
-    pub pairs: HashMap<Rc<Object>,Rc<Object>>,
+    pub pairs: HashMap<Rc<Object>, Rc<Object>>,
 }
 impl MonkeyHash {
     fn inspect(&self) -> String {
-        let pairs: Vec<String> = (&self.pairs).into_iter().map(|(key, value)| format!("{}: {}", key.inspect(), value.inspect())).collect();
+        let pairs: Vec<String> = (&self.pairs)
+            .iter()
+            .map(|(key, value)| format!("{}: {}", key.inspect(), value.inspect()))
+            .collect();
         format!("{{{}}}", pairs.join(", "))
     }
 }
@@ -70,7 +72,7 @@ pub struct Array {
 
 impl Array {
     fn inspect(&self) -> String {
-        let elements: Vec<String> = (&self.elements).into_iter().map(|e| e.to_string()).collect();
+        let elements: Vec<String> = (&self.elements).iter().map(|e| e.to_string()).collect();
         format!("[{}]", elements.join(", "))
     }
 }
@@ -110,70 +112,78 @@ impl Builtin {
         match self {
             Builtin::Len => {
                 if args.len() != 1 {
-                    return Err("len takes only 1 array or string argument".to_string())
+                    return Err("len takes only 1 array or string argument".to_string());
                 }
 
                 let arg = &*Rc::clone(args.first().unwrap());
                 match arg {
                     Object::String(s) => Ok(Rc::new(Object::Int(s.len() as i64))),
                     Object::Array(a) => Ok(Rc::new(Object::Int(a.elements.len() as i64))),
-                    obj => Err(format!("object {:?} not supported as an argument for len", obj))
+                    obj => Err(format!(
+                        "object {:?} not supported as an argument for len",
+                        obj
+                    )),
                 }
-            },
+            }
             Builtin::First => {
                 if args.len() != 1 {
-                    return Err("first takes only 1 array argument".to_string())
-                }
-
-                let arg = &*Rc::clone( args.first().unwrap());
-                match arg {
-                    Object::Array(a) => {
-                        match a.elements.first() {
-                            Some(el) => Ok(Rc::clone(el)),
-                            None => Ok(Rc::new(Object::Null)),
-                        }
-                    },
-                    obj => Err(format!("object {:?} not supported as an argument for first", obj))
-                }
-            },
-            Builtin::Last => {
-                if args.len() != 1 {
-                    return Err("last takes only 1 array argument".to_string())
+                    return Err("first takes only 1 array argument".to_string());
                 }
 
                 let arg = &*Rc::clone(args.first().unwrap());
                 match arg {
-                    Object::Array(a) => {
-                        match a.elements.last() {
-                            Some(el) => Ok(Rc::clone(el)),
-                            None => Ok(Rc::new(Object::Null)),
-                        }
+                    Object::Array(a) => match a.elements.first() {
+                        Some(el) => Ok(Rc::clone(el)),
+                        None => Ok(Rc::new(Object::Null)),
                     },
-                    obj => Err(format!("object {:?} not supported as an argument for last", obj))
+                    obj => Err(format!(
+                        "object {:?} not supported as an argument for first",
+                        obj
+                    )),
                 }
-            },
+            }
+            Builtin::Last => {
+                if args.len() != 1 {
+                    return Err("last takes only 1 array argument".to_string());
+                }
+
+                let arg = &*Rc::clone(args.first().unwrap());
+                match arg {
+                    Object::Array(a) => match a.elements.last() {
+                        Some(el) => Ok(Rc::clone(el)),
+                        None => Ok(Rc::new(Object::Null)),
+                    },
+                    obj => Err(format!(
+                        "object {:?} not supported as an argument for last",
+                        obj
+                    )),
+                }
+            }
             Builtin::Rest => {
                 if args.len() != 1 {
-                    return Err("rest takes only 1 array argument".to_string())
+                    return Err("rest takes only 1 array argument".to_string());
                 }
 
                 let arg = &*Rc::clone(args.first().unwrap());
                 match arg {
                     Object::Array(a) => {
                         if a.elements.len() <= 1 {
-                            Ok(Rc::new(Object::Array(Rc::new(Array{elements: vec![]}))))
+                            Ok(Rc::new(Object::Array(Rc::new(Array { elements: vec![] }))))
                         } else {
                             let mut elements = a.elements.clone();
                             elements.remove(0);
-                            Ok(Rc::new(Object::Array(Rc::new(Array{elements}))))
+                            Ok(Rc::new(Object::Array(Rc::new(Array { elements }))))
                         }
-                    },
-                    obj => Err(format!("object {:?} is not supported as an argument for rest", obj))
+                    }
+                    obj => Err(format!(
+                        "object {:?} is not supported as an argument for rest",
+                        obj
+                    )),
                 }
-            },
+            }
             Builtin::Push => {
                 if args.len() != 2 {
-                    return Err("push takes an array and an object".to_string())
+                    return Err("push takes an array and an object".to_string());
                 }
 
                 let array = &*Rc::clone(args.first().unwrap());
@@ -184,11 +194,11 @@ impl Builtin {
                     Object::Array(a) => {
                         let mut elements = a.elements.clone();
                         elements.push(obj);
-                        Ok(Rc::new(Object::Array(Rc::new(Array{elements}))))
-                    },
-                    _ => Err("first argument to push must be an array".to_string())
+                        Ok(Rc::new(Object::Array(Rc::new(Array { elements }))))
+                    }
+                    _ => Err("first argument to push must be an array".to_string()),
                 }
-            },
+            }
             Builtin::Puts => {
                 for arg in args {
                     println!("{}", arg.inspect())
@@ -223,8 +233,8 @@ pub struct Function {
 
 impl Function {
     fn inspect(&self) -> String {
-        let params: Vec<String> = (&self.parameters).into_iter().map(|p| p.to_string()).collect();
-        format!("fn({}) {{\n{}\n}}", params.join(", "), self.body.to_string())
+        let params: Vec<String> = (&self.parameters).iter().map(|p| p.to_string()).collect();
+        format!("fn({}) {{\n{}\n}}", params.join(", "), self.body)
     }
 }
 impl PartialEq for Function {
@@ -243,7 +253,7 @@ impl Hash for Function {
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct CompiledFunction {
-    pub instructions: code::Instructions,
+    pub instructions: Instructions,
     pub num_locals: usize,
     pub num_parameters: usize,
 }
@@ -265,7 +275,9 @@ pub struct Closure {
     pub free: Vec<Rc<Object>>,
 }
 impl Closure {
-    fn inspect(&self) -> String { format!("Closure[{:?}]", self) }
+    fn inspect(&self) -> String {
+        format!("Closure[{:?}]", self)
+    }
 }
 impl Hash for Closure {
     fn hash<H: Hasher>(&self, _state: &mut H) {
@@ -297,25 +309,33 @@ pub struct Environment {
     pub outer: Option<Rc<RefCell<Environment>>>,
 }
 
+impl Default for Environment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Environment {
     pub fn new() -> Environment {
-        Environment{store: HashMap::new(), outer: None}
+        Environment {
+            store: HashMap::new(),
+            outer: None,
+        }
     }
 
     pub fn new_enclosed(env: Rc<RefCell<Environment>>) -> Environment {
-        Environment{store: HashMap::new(), outer: Some(Rc::clone(&env))}
+        Environment {
+            store: HashMap::new(),
+            outer: Some(Rc::clone(&env)),
+        }
     }
 
     pub fn get(&self, name: &str) -> Option<Rc<Object>> {
         match self.store.get(name) {
-            Some(obj) => {
-                Some(Rc::clone(obj))
-            },
-            None => {
-                match &self.outer {
-                    Some(o) => o.borrow().get(name),
-                    _ => None,
-                }
+            Some(obj) => Some(Rc::clone(obj)),
+            None => match &self.outer {
+                Some(o) => o.borrow().get(name),
+                _ => None,
             },
         }
     }

@@ -8,8 +8,8 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Lexer<'_> {
-        Lexer{
+    pub fn new(input: &'a str) -> Lexer<'a> {
+        Lexer {
             input: input.chars().peekable(),
         }
     }
@@ -24,7 +24,7 @@ impl<'a> Lexer<'a> {
                 } else {
                     Token::Assign
                 }
-            },
+            }
             Some('+') => Token::Plus,
             Some('(') => Token::Lparen,
             Some(')') => Token::Rparen,
@@ -43,7 +43,7 @@ impl<'a> Lexer<'a> {
                 } else {
                     Token::Bang
                 }
-            },
+            }
             Some('*') => Token::Asterisk,
             Some('/') => Token::Slash,
             Some('<') => Token::Lt,
@@ -51,16 +51,16 @@ impl<'a> Lexer<'a> {
             Some(ch) => {
                 if is_letter(ch) {
                     let ident = self.read_identifier(ch);
-                    let tok = token::lookup_ident(ident);
-                    tok
-                } else if ch.is_digit(10) {
+
+                    token::lookup_ident(ident)
+                } else if ch.is_ascii_digit() {
                     Token::Int(self.read_int(ch))
                 } else if ch == '"' {
                     Token::String(self.read_string())
                 } else {
                     Token::Illegal
                 }
-            },
+            }
             None => Token::EOF,
         }
     }
@@ -99,7 +99,7 @@ impl<'a> Lexer<'a> {
         s.push(ch);
 
         while let Some(&ch) = self.peek_char() {
-            if ch.is_digit(10) {
+            if ch.is_ascii_digit() {
                 s.push(self.read_char().unwrap());
             } else {
                 break;
@@ -142,8 +142,8 @@ fn is_letter(ch: char) -> bool {
 
 #[cfg(test)]
 mod test {
-    use crate::token::Token;
     use super::*;
+    use crate::token::Token;
 
     #[test]
     fn next_token() {

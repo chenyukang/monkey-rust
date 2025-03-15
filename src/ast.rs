@@ -1,6 +1,6 @@
 use crate::token;
-use std::fmt;
 use std::collections::HashMap;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug)]
@@ -71,7 +71,7 @@ impl fmt::Display for Expression {
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct HashLiteral {
-    pub pairs: HashMap<Expression,Expression>,
+    pub pairs: HashMap<Expression, Expression>,
 }
 
 // Had to implement Hash for this because HashMap doesn't. Doesn't matter what this is because
@@ -84,7 +84,10 @@ impl Hash for HashLiteral {
 
 impl fmt::Display for HashLiteral {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let pairs: Vec<String> = (&self.pairs).into_iter().map(|(k, v)| format!("{}:{}", k.to_string(), v.to_string())).collect();
+        let pairs: Vec<String> = (&self.pairs)
+            .iter()
+            .map(|(k, v)| format!("{}:{}", k, v))
+            .collect();
         write!(f, "{{{}}}", pairs.join(", "))
     }
 }
@@ -114,7 +117,7 @@ pub struct ArrayLiteral {
 
 impl fmt::Display for ArrayLiteral {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let elements: Vec<String> = (&self.elements).into_iter().map(|e| e.to_string()).collect();
+        let elements: Vec<String> = (&self.elements).iter().map(|e| e.to_string()).collect();
         write!(f, "[{}]", elements.join(", "))
     }
 }
@@ -127,7 +130,7 @@ pub struct IndexExpression {
 
 impl fmt::Display for IndexExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}[{}])", self.left.to_string(), self.index.to_string())
+        write!(f, "({}[{}])", self.left, self.index)
     }
 }
 
@@ -153,7 +156,7 @@ pub struct FunctionLiteral {
 
 impl fmt::Display for FunctionLiteral {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let param_list: Vec<String> = (&self.parameters).into_iter().map(|p| p.to_string()).collect();
+        let param_list: Vec<String> = (&self.parameters).iter().map(|p| p.to_string()).collect();
         write!(f, "({}) {}", param_list.join(", "), self.body)
     }
 }
@@ -166,8 +169,11 @@ pub struct CallExpression {
 
 impl fmt::Display for CallExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let arg_list: Vec<String> = (&self.arguments).into_iter().map(|exp| exp.to_string()).collect();
-        write!(f, "{}({})", self.function.to_string(), arg_list.join(", "))
+        let arg_list: Vec<String> = (&self.arguments)
+            .iter()
+            .map(|exp| exp.to_string())
+            .collect();
+        write!(f, "{}({})", self.function, arg_list.join(", "))
     }
 }
 
@@ -243,7 +249,7 @@ impl fmt::Display for ReturnStatement {
 
 #[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub struct ExpressionStatement {
-    pub expression: Expression
+    pub expression: Expression,
 }
 
 impl fmt::Display for ExpressionStatement {
@@ -257,6 +263,12 @@ pub struct Program {
     pub statements: Vec<Statement>,
 }
 
+impl Default for Program {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Program {
     pub fn new() -> Program {
         Program {
@@ -267,7 +279,10 @@ impl Program {
 
 impl fmt::Display for Program {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let statements: Vec<String> = (&self.statements).into_iter().map(|stmt| stmt.to_string()).collect();
+        let statements: Vec<String> = (&self.statements)
+            .iter()
+            .map(|stmt| stmt.to_string())
+            .collect();
         write!(f, "{}", statements.join(""))
     }
 }
@@ -278,13 +293,11 @@ mod test {
 
     #[test]
     fn display() {
-
-        let p = Program{
-            statements: vec![
-                Statement::Let(Box::new(
-                    LetStatement{
-                            name: "asdf".to_string(),
-                            value: Expression::Identifier("bar".to_string())}))],
+        let p = Program {
+            statements: vec![Statement::Let(Box::new(LetStatement {
+                name: "asdf".to_string(),
+                value: Expression::Identifier("bar".to_string()),
+            }))],
         };
 
         let expected = "let asdf = bar;";

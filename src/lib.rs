@@ -33,13 +33,13 @@
 //! }
 //! ```
 
-mod token;
 mod ast;
-pub mod object;
-pub mod lexer;
-pub mod repl;
-pub mod parser;
-pub mod evaluator;
 pub mod code;
 pub mod compiler;
+pub mod evaluator;
+pub mod lexer;
+pub mod object;
+pub mod parser;
+pub mod repl;
+mod token;
 pub mod vm;

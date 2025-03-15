@@ -1,6 +1,4 @@
-use byteorder;
-use std::io::Cursor;
-use self::byteorder::{ByteOrder, BigEndian, WriteBytesExt, ReadBytesExt};
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 pub type Instructions = Vec<u8>;
 
@@ -15,12 +13,16 @@ impl InstructionsFns for Instructions {
         let mut i = 0;
 
         while i < self.len() {
-            let op:u8 = *self.get(i).unwrap();
+            let op: u8 = *self.get(i).unwrap();
             let op = unsafe { ::std::mem::transmute(op) };
 
-            let (operands, read) = read_operands(&op, &self[i+1..]);
+            let (operands, read) = read_operands(&op, &self[i + 1..]);
 
-            ret.push_str(&format!("{:04} {}\n", i, Self::fmt_instruction(&op, &operands)));
+            ret.push_str(&format!(
+                "{:04} {}\n",
+                i,
+                Self::fmt_instruction(&op, &operands)
+            ));
             i = i + 1 + read;
         }
 
@@ -31,12 +33,11 @@ impl InstructionsFns for Instructions {
         match op.operand_widths().len() {
             2 => format!("{} {} {}", op.name(), operands[0], operands[1]),
             1 => format!("{} {}", op.name(), operands[0]),
-            0 => format!("{}", op.name()),
-            _ => panic!("unsuported operand width")
+            0 => op.name().to_string(),
+            _ => panic!("unsuported operand width"),
         }
     }
 }
-
 
 #[repr(u8)]
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -109,13 +110,29 @@ impl Op {
 
     pub fn operand_widths(&self) -> Vec<u8> {
         match self {
-            Op::Constant | Op::JumpNotTruthy | Op::Jump |
-            Op::SetGobal | Op::GetGlobal | Op::Array | Op::Hash => vec![2],
-            Op::Add | Op::Sub | Op::Mul |
-            Op::Div | Op::Pop | Op::True |
-            Op::False | Op::Equal | Op::NotEqual |
-            Op::GreaterThan | Op::Minus | Op::Bang | Op::Null |
-            Op::Index | Op::ReturnValue | Op::Return => vec![],
+            Op::Constant
+            | Op::JumpNotTruthy
+            | Op::Jump
+            | Op::SetGobal
+            | Op::GetGlobal
+            | Op::Array
+            | Op::Hash => vec![2],
+            Op::Add
+            | Op::Sub
+            | Op::Mul
+            | Op::Div
+            | Op::Pop
+            | Op::True
+            | Op::False
+            | Op::Equal
+            | Op::NotEqual
+            | Op::GreaterThan
+            | Op::Minus
+            | Op::Bang
+            | Op::Null
+            | Op::Index
+            | Op::ReturnValue
+            | Op::Return => vec![],
             Op::GetLocal | Op::SetLocal | Op::Call | Op::GetBuiltin | Op::GetFree => vec![1],
             Op::Closure => vec![2, 1],
         }
@@ -127,14 +144,10 @@ pub fn make_instruction(op: Op, operands: &Vec<usize>) -> Vec<u8> {
     let widths = op.operand_widths();
     instruction.push(op as u8);
 
-    for (o, width) in operands.into_iter().zip(widths) {
+    for (o, width) in operands.iter().zip(widths) {
         match width {
-            2 => {
-                instruction.write_u16::<BigEndian>(*o as u16).unwrap()
-            },
-            1 => {
-                instruction.write_u8(*o as u8).unwrap()
-            },
+            2 => instruction.write_u16::<BigEndian>(*o as u16).unwrap(),
+            1 => instruction.write_u8(*o as u8).unwrap(),
             _ => panic!("unsupported operand width {}", width),
         };
     }
@@ -149,14 +162,14 @@ pub fn read_operands(op: &Op, instructions: &[u8]) -> (Vec<usize>, usize) {
     for width in op.operand_widths() {
         match width {
             2 => {
-                operands.push(BigEndian::read_u16(&instructions[offset..offset+2]) as usize);
+                operands.push(BigEndian::read_u16(&instructions[offset..offset + 2]) as usize);
                 offset += 2;
-            },
+            }
             1 => {
                 operands.push(instructions[offset] as usize);
                 offset += 1;
-            },
-            _ => panic!("width not supported for operand")
+            }
+            _ => panic!("width not supported for operand"),
         }
     }
 
@@ -176,10 +189,26 @@ mod test {
         }
 
         let tests = vec![
-            Test{op: Op::Constant, operands: vec![65534], expected: vec![Op::Constant as u8, 255, 254]},
-            Test{op: Op::Add, operands: vec![], expected: vec![Op::Add as u8]},
-            Test{op: Op::GetLocal, operands: vec![255], expected: vec![Op::GetLocal as u8, 255]},
-            Test{op: Op::Call, operands: vec![255], expected: vec![Op::Call as u8, 255]},
+            Test {
+                op: Op::Constant,
+                operands: vec![65534],
+                expected: vec![Op::Constant as u8, 255, 254],
+            },
+            Test {
+                op: Op::Add,
+                operands: vec![],
+                expected: vec![Op::Add as u8],
+            },
+            Test {
+                op: Op::GetLocal,
+                operands: vec![255],
+                expected: vec![Op::GetLocal as u8, 255],
+            },
+            Test {
+                op: Op::Call,
+                operands: vec![255],
+                expected: vec![Op::Call as u8, 255],
+            },
         ];
 
         for t in tests {
@@ -216,8 +245,16 @@ mod test {
         }
 
         let tests = vec![
-            Test{op: Op::Constant, operands: vec![65535], bytes_read: 2},
-            Test{op: Op::GetLocal, operands: vec![255], bytes_read: 1},
+            Test {
+                op: Op::Constant,
+                operands: vec![65535],
+                bytes_read: 2,
+            },
+            Test {
+                op: Op::GetLocal,
+                operands: vec![255],
+                bytes_read: 1,
+            },
         ];
 
         for t in tests {
